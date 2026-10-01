@@ -360,7 +360,7 @@ namespace RT64 {
                         inspector->draw(commandList);
                     }
                     
-                    commandList->barriers(RenderBarrierStage::NONE, RenderTextureBarrier(swapChainTexture, RenderTextureLayout::PRESENT));
+                    commandList->barriers(RenderBarrierStage::NONE, RenderTextureBarrier(swapChainTexture, ext.swapChain->getPresentLayout()));
                     commandList->end();
                     const RenderCommandList *commandList = ext.presentGraphicsWorker->commandList.get();
                     RenderCommandSemaphore *waitSemaphore = acquiredSemaphore.get();
