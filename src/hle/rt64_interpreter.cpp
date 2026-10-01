@@ -28,7 +28,7 @@ namespace RT64 {
             state->flush();
         }
 
-        const uint32_t AddressMask = 0xFFFFF8;
+        const uint32_t AddressMask = RDRAMAddressMask & ~7U;
         const uint32_t maskedTextAddress = textAddress & AddressMask;
         const uint32_t maskedDataAddress = dataAddress & AddressMask;
         if ((UCode.textAddress != maskedTextAddress) || (UCode.dataAddress != maskedDataAddress)) {

@@ -119,11 +119,11 @@ namespace RT64 {
     // Converts the given segmented address and then applies the RSP DMA physical address mask.
     // Used in cases where the RSP performs a DMA with a segmented address as the input. 
     uint32_t RSP::fromSegmentedMasked(uint32_t segAddress) {
-        return maskPhysicalAddress<0x00FFFFF8>(fromSegmented(segAddress));
+        return maskPhysicalAddress<RDRAMAddressMask & ~7U>(fromSegmented(segAddress));
     }
 
     uint32_t RSP::fromSegmentedMaskedPD(uint32_t segAddress) {
-        return maskPhysicalAddress<0x00FFFFFC>(fromSegmented(segAddress));
+        return maskPhysicalAddress<RDRAMAddressMask & ~3U>(fromSegmented(segAddress));
     }
 
     void RSP::setSegment(uint32_t seg, uint32_t address) {

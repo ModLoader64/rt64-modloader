@@ -93,6 +93,8 @@ namespace RT64 {
         std::vector<Framebuffer *> differentFbs;
         GameConfiguration gameConfig;
         uint32_t displayListAddress;
+        bool pauseOnSelfBranch = false;
+        uint32_t spinAddress = UINT32_MAX; // Resume point
         uint64_t displayListCounter;
         bool rdramCheckPending;
         uint32_t lastWorkloadIndex;

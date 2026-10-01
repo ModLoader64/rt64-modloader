@@ -45,7 +45,7 @@ namespace RT64 {
     VI Application::Core::decodeVI() const {
         VI vi;
         vi.status.word = *VI_STATUS_REG;
-        vi.origin = (*VI_ORIGIN_REG) & 0xFFFFFFU;
+        vi.origin = (*VI_ORIGIN_REG) & RDRAMAddressMask;
         vi.width = (*VI_WIDTH_REG) & 0xFFFU;
         vi.intr = (*VI_INTR_REG) & 0x3FF;
         vi.vCurrentLine = (*VI_V_CURRENT_LINE_REG) & 0x3FF;
@@ -183,7 +183,7 @@ namespace RT64 {
 
             if (renderInterface != nullptr) {
                 // Create the render device.
-                device = renderInterface->createDevice();
+                device = renderInterface->createDevice(appConfig.preferredDeviceName);
             }
         }
 
@@ -279,7 +279,7 @@ namespace RT64 {
 
             chosenGraphicsAPI = UserConfiguration::GraphicsAPI::Vulkan;
 
-            device = renderInterface->createDevice();
+            device = renderInterface->createDevice(appConfig.preferredDeviceName);
             if (device == nullptr) {
                 fprintf(stderr, "Unable to find compatible graphics device.\n");
                 return SetupResult::GraphicsDeviceNotFound;
@@ -340,7 +340,17 @@ namespace RT64 {
             swapChainDesc.enablePresentWait = true;
         }
 
-        swapChain = presentGraphicsWorker->commandQueue->createSwapChain(swapChainDesc);
+        if (appConfig.createSwapChain) {
+            swapChain = appConfig.createSwapChain(device.get(), presentGraphicsWorker->commandQueue.get(), swapChainDesc, usesHDR);
+        }
+        else {
+            swapChain = presentGraphicsWorker->commandQueue->createSwapChain(swapChainDesc);
+        }
+
+        if (swapChain == nullptr) {
+            fprintf(stderr, "Unable to create swap chain.\n");
+            return SetupResult::SwapChainNotFound;
+        }
 
         // Before configuring multisampling, make sure the device actually supports it for the formats we'll use. If it doesn't, turn off antialiasing in the configuration.
         const RenderSampleCounts colorSampleCounts = device->getSampleCountsSupported(RenderTarget::colorBufferFormat(usesHDR));
@@ -353,6 +363,7 @@ namespace RT64 {
         // Create the shader library.
         const RenderMultisampling multisampling = RasterShader::generateMultisamplingPattern(userConfig.msaaSampleCount(), device->getCapabilities().sampleLocations);
         shaderLibrary = std::make_unique<ShaderLibrary>(usesHDR, usesHardwareResolve);
+        shaderLibrary->swapChainFormat = swapChainDesc.format;
         shaderLibrary->setupCommonShaders(renderInterface.get(), device.get());
         shaderLibrary->setupMultisamplingShaders(renderInterface.get(), device.get(), multisampling);
 
