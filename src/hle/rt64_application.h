@@ -40,6 +40,9 @@ namespace RT64 {
         std::filesystem::path dataPath;
         bool detectDataPath = true;
         bool useConfigurationFile = true;
+
+        std::string preferredDeviceName;
+        std::unique_ptr<RenderSwapChain> (*createSwapChain)(RenderDevice *, RenderCommandQueue *, RenderSwapChainDesc &, bool usesHDR) = nullptr;
     };
 
     struct Application : public ApplicationWindow::Listener {
@@ -48,7 +51,8 @@ namespace RT64 {
             DynamicLibrariesNotFound,
             InvalidGraphicsAPI,
             GraphicsAPINotFound,
-            GraphicsDeviceNotFound
+            GraphicsDeviceNotFound,
+            SwapChainNotFound
         };
 
         enum class DeveloperShortcut {

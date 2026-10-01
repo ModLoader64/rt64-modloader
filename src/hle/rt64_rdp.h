@@ -26,7 +26,7 @@
 #define RDP_TMEM_MASK64             511
 #define RDP_TMEM_MASK128            255
 #define RDP_TILES                   8
-#define RDP_ADDRESS_MASK            0xFFFFFF
+#define RDP_ADDRESS_MASK            RT64::RDRAMAddressMask
 #define RDP_EXTENDED_STACK_SIZE     16
 
 #ifdef __GNUC__

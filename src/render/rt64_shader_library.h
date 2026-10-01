@@ -16,6 +16,7 @@ namespace RT64 {
         SamplerLibrary samplerLibrary;
         bool usesHDR = false;
         bool usesHardwareResolve = false;
+        RenderFormat swapChainFormat = RenderFormat::B8G8R8A8_UNORM;
 
         // All shaders.
         ShaderRecord bicubicScaling;

@@ -20,6 +20,12 @@
 #endif
 
 namespace RT64 {
+#ifdef RT64_EXTENDED_RDRAM
+    constexpr uint32_t RDRAMAddressMask = 0x7FFFFFF;
+#else
+    constexpr uint32_t RDRAMAddressMask = 0xFFFFFF;
+#endif
+
     enum class UpscaleMode {
         Bilinear,
         FSR,

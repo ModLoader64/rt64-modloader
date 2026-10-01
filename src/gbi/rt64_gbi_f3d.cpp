@@ -79,6 +79,13 @@ namespace RT64 {
             }
 
             const uint32_t rdramAddress = state->rsp->fromSegmentedMasked((*dl)->w1);
+
+            if (state->pauseOnSelfBranch && ((*dl)->p0(16, 1) != 0) && (state->fromRDRAM(rdramAddress) == reinterpret_cast<uint8_t *>(*dl))) {
+                state->spinAddress = rdramAddress;
+                *dl = nullptr;
+                return;
+            }
+
             *dl = reinterpret_cast<DisplayList *>(state->fromRDRAM(rdramAddress)) - 1;
         }
 

@@ -19,7 +19,7 @@
 #include "rt64_projection.h"
 #include "rt64_transform_group.h"
 
-#define RSP_DMA_MASK 0xFFFFF8 // Only bits 3-23 (0-indexed) are used by the DMA hardware.
+#define RSP_DMA_MASK (RT64::RDRAMAddressMask & ~7U)
 
 #define RSP_MAX_LIGHTS              7
 #define RSP_MATRIX_STACK_SIZE       32

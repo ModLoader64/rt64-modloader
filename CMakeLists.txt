@@ -9,6 +9,7 @@ if (APPLE)
 endif()
 
 option(RT64_STATIC "Build RT64 as a static library" OFF)
+option(RT64_EXTENDED_RDRAM "Allow 128 MiB emulator RDRAM" OFF)
 
 
 option(RT64_SDL_WINDOW_VULKAN "Build RT64 to expect an SDL Window outside of Windows" OFF)
@@ -443,6 +444,7 @@ set_target_properties(rt64 PROPERTIES PREFIX "")
 target_link_libraries(rt64 re-spirv)
 target_link_libraries(rt64 nfd)
 target_link_libraries(rt64 libzstd_static)
+target_compile_definitions(rt64 PUBLIC $<$<BOOL:${RT64_EXTENDED_RDRAM}>:RT64_EXTENDED_RDRAM>)
 target_link_libraries(rt64 plume)
 
 # Add tools.
