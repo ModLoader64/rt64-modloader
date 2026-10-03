@@ -146,7 +146,7 @@ namespace RT64 {
         }
     }
 
-    uint64_t ReplacementMap::hashFromRelativePath(uint32_t fileSystemIndex, const std::string &relativePath) const {
+    uint64_t ReplacementMap::hashFromRelativePath(uint32_t fileSystemIndex, const std::string &relativePath) {
         XXH3_state_t xxh3;
         XXH3_64bits_reset(&xxh3);
         XXH3_64bits_update(&xxh3, &fileSystemIndex, sizeof(uint32_t));
@@ -823,7 +823,7 @@ namespace RT64 {
         return true;
     }
 
-    bool TextureCache::setLowMipCache(RenderDevice *device, RenderCommandList *commandList, const uint8_t *bytes, size_t byteCount, std::unique_ptr<RenderBuffer> &dstUploadResource, std::unordered_map<std::string, LowMipCacheTexture> &dstTextureMap, uint64_t &totalMemory) {
+    bool TextureCache::setLowMipCache(RenderDevice *device, RenderCommandList *commandList, const uint8_t *bytes, size_t byteCount, std::unique_ptr<RenderBuffer> &dstUploadResource, std::unordered_map<uint64_t, LowMipCacheTexture> &dstTextureMap, uint64_t &totalMemory, uint32_t fileSystemIndex) {
         dstUploadResource = device->createBuffer(RenderBufferDesc::UploadBuffer(byteCount));
 
         // Upload the entire file to the GPU to copy data from it directly.
@@ -834,7 +834,7 @@ namespace RT64 {
         std::vector<RenderTextureBarrier> beforeCopyBarriers;
         std::vector<RenderTextureCopyLocation> copyDestinations;
         std::vector<RenderTextureCopyLocation> copySources;
-        std::list<std::pair<std::string, Texture *>> texturesLoaded;
+        std::list<std::pair<uint64_t, Texture *>> texturesLoaded;
         size_t byteCursor = 0;
         bool readFailed = false;
         while (byteCursor < byteCount) {
@@ -867,7 +867,8 @@ namespace RT64 {
             };
 
             std::string cachePathForward = FileSystem::toForwardSlashes(cachePath);
-            const bool skipTexture = (dstTextureMap.find(cachePathForward) != dstTextureMap.end());
+            uint64_t pathHash = ReplacementMap::hashFromRelativePath(fileSystemIndex, cachePathForward);
+            const bool skipTexture = (dstTextureMap.find(pathHash) != dstTextureMap.end());
             if (skipTexture) {
                 for (uint32_t i = 0; i < cacheHeader->mipCount; i++) {
                     alignToTexturePlacement(byteCursor);
@@ -899,7 +900,7 @@ namespace RT64 {
                 }
 
                 totalMemory += newTexture->memorySize;
-                texturesLoaded.emplace_back(cachePathForward, newTexture);
+                texturesLoaded.emplace_back(pathHash, newTexture);
             }
         }
 
@@ -1122,7 +1123,8 @@ namespace RT64 {
 
                     // Look for the low mip cache version if it exists if we can't use the real replacement yet.
                     if ((replacementTexture == nullptr) && (resolvedPath.resolvedOperation == ReplacementOperation::Stream)) {
-                        auto lowMipCacheIt = textureMap.replacementMap.lowMipCacheTextures.find(resolvedPath.relativePath);
+                        uint64_t pathHash = ReplacementMap::hashFromRelativePath(resolvedPath.fileSystemIndex, resolvedPath.relativePath);
+                        auto lowMipCacheIt = textureMap.replacementMap.lowMipCacheTextures.find(pathHash);
                         if (lowMipCacheIt != textureMap.replacementMap.lowMipCacheTextures.end()) {
                             lowMipCacheTexture = lowMipCacheIt->second.texture;
 
@@ -1534,7 +1536,7 @@ namespace RT64 {
 
                 if (fileSystems[i]->load(ReplacementLowMipCacheFilename, mipCacheBytes)) {
                     uploadBuffers.emplace_back();
-                    if (!setLowMipCache(copyWorker->device, loaderCommandList.get(), mipCacheBytes.data(), mipCacheBytes.size(), uploadBuffers.back(), textureMap.replacementMap.lowMipCacheTextures, totalMemory)) {
+                    if (!setLowMipCache(copyWorker->device, loaderCommandList.get(), mipCacheBytes.data(), mipCacheBytes.size(), uploadBuffers.back(), textureMap.replacementMap.lowMipCacheTextures, totalMemory, uint32_t(i))) {
                         fprintf(stderr, "Failed to load low mip cache.\n");
                     }
                 }
