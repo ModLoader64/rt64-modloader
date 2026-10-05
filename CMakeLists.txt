@@ -435,10 +435,11 @@ if (${RT64_STATIC})
     add_library(rt64 STATIC ${SOURCES})
 else()
     add_library(rt64 SHARED ${SOURCES})
+    set_target_properties(rt64 PROPERTIES PREFIX "")
 endif()
 
 set_target_properties(rt64 PROPERTIES OUTPUT_NAME "rt64")
-set_target_properties(rt64 PROPERTIES PREFIX "")
+set_target_properties(libzstd_static PROPERTIES OUTPUT_NAME zstd_static)
 
 # Add common libraries.
 target_link_libraries(rt64 re-spirv)
