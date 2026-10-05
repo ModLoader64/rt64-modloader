@@ -153,7 +153,8 @@ namespace RT64 {
             tileCopy.framebuffer = renderWorker->device->createFramebuffer(RenderFramebufferDesc(&framebufferTexture, 1));
         }
 
-        RenderTargetKey colorTargetKey(fbIt->second.addressStart, fbIt->second.width, fbIt->second.siz, Framebuffer::Type::Color);
+        // A later framebuffer can reuse this address with a different pixel size (for example: OOT kaleidoscope)
+        RenderTargetKey colorTargetKey(fbIt->second.addressStart, fbIt->second.width, fbTile.siz, Framebuffer::Type::Color);
         RenderTarget &colorTarget = targetManager.get(colorTargetKey);
         uint32_t rtWidth, rtHeight, rtMisalignX;
         RenderTarget::computeScaledSize(fbIt->second.width, fbIt->second.height, resolutionScale, rtWidth, rtHeight, rtMisalignX);
@@ -165,7 +166,7 @@ namespace RT64 {
         }
 
         if (fbIt->second.everUsedAsDepth) {
-            RenderTargetKey depthTargetKey(fbIt->second.addressStart, fbIt->second.width, fbIt->second.siz, Framebuffer::Type::Depth);
+            RenderTargetKey depthTargetKey(fbIt->second.addressStart, fbIt->second.width, fbTile.siz, Framebuffer::Type::Depth);
             RenderTarget &depthTarget = targetManager.get(depthTargetKey);
             if (depthTarget.resize(renderWorker, rtWidth, rtHeight)) {
                 assert(resizedTargets != nullptr);
@@ -188,7 +189,8 @@ namespace RT64 {
 
         auto fbIt = framebuffers.find(op.createTileCopy.address);
         assert(fbIt != framebuffers.end());
-        RenderTargetKey colorTargetKey(fbIt->second.addressStart, fbIt->second.width, fbIt->second.siz, Framebuffer::Type::Color);
+        const FramebufferTile &fbTile = op.createTileCopy.fbTile;
+        RenderTargetKey colorTargetKey(fbIt->second.addressStart, fbIt->second.width, fbTile.siz, Framebuffer::Type::Color);
         RenderTarget &colorTarget = targetManager.get(colorTargetKey);
         if (tileCopy.readColorFromStorage) {
             colorTarget.clearColorTarget(renderWorker);
@@ -200,7 +202,7 @@ namespace RT64 {
 
         // Copy from depth target if the last write was a depth buffer.
         if (fbIt->second.lastWriteType == Framebuffer::Type::Depth) {
-            RenderTargetKey depthTargetKey(fbIt->second.addressStart, fbIt->second.width, fbIt->second.siz, Framebuffer::Type::Depth);
+            RenderTargetKey depthTargetKey(fbIt->second.addressStart, fbIt->second.width, fbTile.siz, Framebuffer::Type::Depth);
             RenderTarget &depthTarget = targetManager.get(depthTargetKey);
             if (tileCopy.readDepthFromStorage) {
                 depthTarget.clearDepthTarget(renderWorker);
